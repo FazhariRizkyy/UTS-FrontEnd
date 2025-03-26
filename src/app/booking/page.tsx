@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 
@@ -16,10 +16,13 @@ const initialData = [
 ];
 
 export default function DashboardTable() {
-    const [data] = useState(initialData);
+    const [data, setData] = useState(initialData);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [sortConfig, setSortConfig] = useState<{ key: keyof typeof initialData[0]; direction: 'ascending' | 'descending' }>({ key: 'room', direction: 'ascending' });
+    const [newBooking, setNewBooking] = useState({ room: '', bookingDate: '', bookedBy: '', price: '' });
+    const [editBooking, setEditBooking] = useState<typeof initialData[0] | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const itemsPerPage = 5;
 
     const filteredData = data.filter((item) =>
@@ -48,6 +51,59 @@ export default function DashboardTable() {
         setSortConfig({ key, direction });
     };
 
+    const handleAddOrUpdateBooking = () => {
+        if (!newBooking.room || !newBooking.bookingDate || !newBooking.bookedBy || !newBooking.price) {
+            alert("Semua bidang harus diisi!");
+            return;
+        }
+
+        if (editBooking) {
+            setData(prevData => prevData.map(item =>
+                item.id === editBooking.id ? { ...newBooking, id: editBooking.id, price: Number(newBooking.price) } : item
+            ));
+        } else {
+            setData(prevData => [...prevData, { ...newBooking, id: data.length + 1, price: Number(newBooking.price) }]);
+        }
+
+        setNewBooking({ room: '', bookingDate: '', bookedBy: '', price: '' });
+        setEditBooking(null);
+        setIsModalOpen(false);
+    };
+
+    const handleEdit = (item) => {
+        setNewBooking({ room: item.room, bookingDate: item.bookingDate, bookedBy: item.bookedBy, price: item.price });
+        setEditBooking(item);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (id) => {
+        setData(prevData => prevData.filter(item => item.id !== id));
+    };
+
+    const openAddModal = () => {
+        setNewBooking({ room: '', bookingDate: '', bookedBy: '', price: '' });
+        setEditBooking(null);
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setNewBooking({ room: '', bookingDate: '', bookedBy: '', price: '' });
+        setEditBooking(null);
+        setIsModalOpen(false);
+    };
+
+    const handleNextPage = () => {
+        if (page < totalPages) {
+            setPage(prevPage => prevPage + 1);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (page > 1) {
+            setPage(prevPage => prevPage - 1);
+        }
+    };
+
     return (
         <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
             <div className="bg-white p-4 rounded-lg shadow w-3/4 mt-2">
@@ -58,7 +114,7 @@ export default function DashboardTable() {
                         className="p-2 border rounded-md w-1/3"
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded">Add New</button>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={openAddModal}>Add New</button>
                 </div>
                 <table className="w-full border-collapse bg-white">
                     <thead>
@@ -80,24 +136,33 @@ export default function DashboardTable() {
                                 <td className="p-2">{item.bookedBy}</td>
                                 <td className="p-2">{item.price}</td>
                                 <td className="p-2">
-                                    <button className="bg-yellow-500 text-white px-3 py-1 rounded mr-2">EDIT</button>
-                                    <button className="bg-red-600 text-white px-3 py-1 rounded">HAPUS</button>
+                                    <button className="bg-yellow-500 text-white px-3 py-1 rounded mr-2" onClick={() => handleEdit(item)}>EDIT</button>
+                                    <button className="bg-red-600 text-white px-3 py-1 rounded" onClick={() => handleDelete(item.id)}>HAPUS</button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                <div className="flex justify-between items-center mt-4">
-                    <span>Showing {itemsPerPage * (page - 1) + 1} to {Math.min(page * itemsPerPage, sortedData.length)} of {sortedData.length} results</span>
-                    <div className="flex space-x-2">
-                        <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-3 py-1 border rounded disabled:opacity-50">{'<'}</button>
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button key={i} onClick={() => setPage(i + 1)} className={`px-3 py-1 border rounded ${page === i + 1 ? 'bg-blue-500 text-white' : ''}`}>{i + 1}</button>
-                        ))}
-                        <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 border rounded disabled:opacity-50">{'>'}</button>
-                    </div>
+                <div className="flex justify-between mt-4">
+                    <button onClick={handlePreviousPage} disabled={page === 1} className="bg-gray-300 text-gray-700 px-4 py-2 rounded" >Previous</button>
+                    <span>Page {page} of {totalPages}</span>
+                    <button onClick={handleNextPage} disabled={page === totalPages} className="bg-gray-300 text-gray-700 px-4 py-2 rounded">Next</button>
                 </div>
             </div>
+
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h2 className="text-lg font-bold mb-4">{editBooking ? "Edit Booking" : "Add New Booking"}</h2>
+                        <input type="text" placeholder="Room" className="w-full p-2 border mb-2" value={newBooking.room} onChange={(e) => setNewBooking({ ...newBooking, room: e.target.value })} />
+                        <input type="date" className="w-full p-2 border mb-2" value={newBooking.bookingDate} onChange={(e) => setNewBooking({ ...newBooking, bookingDate: e.target.value })} />
+                        <input type="text" placeholder="Booked By" className="w-full p-2 border mb-2" value={newBooking.bookedBy} onChange={(e) => setNewBooking({ ...newBooking, bookedBy: e.target.value })} />
+                        <input type="number" placeholder="Price" className="w-full p-2 border mb-4" value={newBooking.price} onChange={(e) => setNewBooking({ ...newBooking, price: e.target.value })} />
+                        <button className="bg-green-500 text-white px-4 py-2 rounded mr-2" onClick={handleAddOrUpdateBooking}>Save</button>
+                        <button className="bg-gray-500 text-white px-4 py-2 rounded" onClick={closeModal}>Close</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

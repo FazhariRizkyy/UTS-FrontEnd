@@ -1,123 +1,126 @@
 "use client";
 import { useState } from "react";
 
-const data = [
-    { id: 1, name: "Auditorium Utama", capacity: 300, category: "Auditorium", price: "Rp. 3.500.000", status: "APPROVED" },
-    { id: 2, name: "Hall A", capacity: 200, category: "Hall", price: "Rp. 2.500.000", status: "PENDING" },
-    { id: 3, name: "Meeting Room", capacity: 50, category: "Room", price: "Rp. 1.000.000", status: "APPROVED" },
-    { id: 4, name: "Ballroom", capacity: 500, category: "Ballroom", price: "Rp. 5.000.000", status: "REJECTED" },
-    { id: 5, name: "Conference Hall", capacity: 150, category: "Hall", price: "Rp. 3.000.000", status: "APPROVED" },
-    { id: 6, name: "Small Hall", capacity: 100, category: "Hall", price: "Rp. 1.500.000", status: "PENDING" },
-    { id: 7, name: "Ruang Serbaguna", capacity: 80, category: "Room", price: "Rp. 1.200.000", status: "APPROVED" },
-    { id: 8, name: "Ruang Rapat VIP", capacity: 20, category: "Room", price: "Rp. 800.000", status: "REJECTED" },
-    { id: 9, name: "Outdoor Area", capacity: 400, category: "Outdoor", price: "Rp. 4.000.000", status: "PENDING" },
-    { id: 10, name: "Ruang Presentasi", capacity: 30, category: "Room", price: "Rp. 600.000", status: "APPROVED" },
-    { id: 11, name: "Hall B", capacity: 250, category: "Hall", price: "Rp. 3.200.000", status: "APPROVED" },
-    { id: 12, name: "Ruang Kelas", capacity: 40, category: "Room", price: "Rp. 900.000", status: "PENDING" },
-    { id: 13, name: "Ruang Pameran", capacity: 350, category: "Exhibition", price: "Rp. 4.500.000", status: "REJECTED" },
-    { id: 14, name: "Ruang Diskusi", capacity: 60, category: "Room", price: "Rp. 1.100.000", status: "APPROVED" },
-    { id: 15, name: "Ruang Latihan", capacity: 90, category: "Room", price: "Rp. 1.300.000", status: "PENDING" },
-    { id: 16, name: "Ruang Konferensi", capacity: 120, category: "Hall", price: "Rp. 2.800.000", status: "APPROVED" },
-    { id: 17, name: "Ruang Makan", capacity: 150, category: "Dining", price: "Rp. 2.000.000", status: "REJECTED" },
-    { id: 18, name: "Ruang Kreatif", capacity: 70, category: "Room", price: "Rp. 1.400.000", status: "PENDING" },
-    { id: 19, name: "Ruang Pertemuan", capacity: 110, category: "Room", price: "Rp. 1.800.000", status: "APPROVED" },
-    { id: 20, name: "Ruang Serbaguna 2", capacity: 90, category: "Room", price: "Rp. 1.700.000", status: "PENDING" }
+const initialData = [
+    { id: 1, name: "Auditorium Utama", capacity: 300, category: "Auditorium", price: "3500000", status: "APPROVED" },
+    { id: 2, name: "Hall A", capacity: 200, category: "Hall", price: "2500000", status: "PENDING" },
+    { id: 3, name: "Meeting Room", capacity: 50, category: "Room", price: "1000000", status: "APPROVED" },
+    { id: 4, name: "Ballroom", capacity: 500, category: "Ballroom", price: "5000000", status: "REJECTED" },
+    { id: 5, name: "Conference Hall", capacity: 150, category: "Hall", price: "3000000", status: "APPROVED" },
 ];
+
+const formatPrice = (value: string) => "Rp. " + Number(value).toLocaleString("id-ID");
 
 const Table = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortConfig, setSortConfig] = useState<{ key: keyof typeof data[0]; direction: 'ascending' | 'descending' }>({ key: 'id', direction: 'ascending' });
+    const [tableData, setTableData] = useState(initialData);
+    const [editItem, setEditItem] = useState<{
+        id: number; name: string; capacity: string; category: string; price: string; status: string;
+    } | null>(null);
+    const [newItem, setNewItem] = useState({ name: "", capacity: "", category: "", price: "", status: "PENDING" });
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const itemsPerPage = 5;
 
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const filteredData = tableData.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-    const filteredData = data.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const [nextId, setNextId] = useState(initialData.length + 1);
 
-    const sortedData = [...filteredData].sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-            return sortConfig.direction === 'ascending' ? -1 : 1;
+    const handleAddOrUpdateItem = () => {
+        if (!newItem.name || !newItem.capacity || !newItem.category || !newItem.price) {
+            alert("Semua bidang harus diisi!");
+            return;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-            return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-    });
 
-    const currentItems = sortedData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-
-    const requestSort = (key: keyof typeof data[0]) => {
-        let direction: 'ascending' | 'descending' = 'ascending';
-        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-            direction = 'descending';
+        if (editItem) {
+            setTableData(prevData =>
+                prevData.map(item =>
+                    item.id === editItem.id
+                        ? { ...newItem, id: editItem.id, capacity: Number(newItem.capacity), price: newItem.price }
+                        : item
+                )
+            );
+        } else {
+            setTableData(prevData => [
+                ...prevData,
+                { ...newItem, id: nextId, capacity: Number(newItem.capacity), price: newItem.price },
+            ]);
+            setNextId(prevId => prevId + 1);
         }
-        setSortConfig({ key, direction });
+
+        setNewItem({ name: "", capacity: "", category: "", price: "", status: "PENDING" });
+        setEditItem(null);
+        setIsModalOpen(false);
     };
-    
+
+    const handleEdit = (item: { id: number; name: string; capacity: number; category: string; price: string; status: string; }) => {
+        setNewItem({ ...item, capacity: item.capacity.toString(), price: item.price });
+        setEditItem({ ...item, capacity: item.capacity.toString() });
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (id: number) => {
+        setTableData(prevData => prevData.filter(item => item.id !== id));
+    };
+
     return (
         <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
             <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-4xl">
-                <input
-                    type="text"
-                    placeholder="Type for search then enter"
-                    className="w-80 p-2 border border-gray-300 rounded mb-4"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button className="bg-blue-500 text-white px-4 py-2 rounded ml-107">Add New</button>
+                <input type="text" placeholder="Search" className="w-80 p-2 border border-gray-300 rounded mb-4" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                <button className="bg-blue-500 text-white px-3 py-2 rounded mb-4 ml-2" onClick={() => setIsModalOpen(true)}>Add</button>
                 <table className="w-full border-collapse border border-gray-200">
                     <thead>
                         <tr className="bg-gray-200">
-                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('id')}>NO</th>
-                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('name')}>NAME</th>
-                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('capacity')}>CAPACITY</th>
-                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('category')}>CATEGORY</th>
-                            <th className="p-3 text-center cursor-pointer" onClick={() => requestSort('price')}>PRICE</th>
-                            <th className="p-3 text-center cursor-pointer" onClick={() => requestSort('status')}>STATUS</th>
-                            <th className="p-3 text-center">ACTION</th>
+                            {["ID", "Name", "Capacity", "Category", "Price", "Status", "Action"].map((key) => (
+                                <th key={key} className="p-3 text-left">{key}</th>
+                            ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {currentItems.map((item, index) => (
+                        {currentItems.map(item => (
                             <tr key={item.id} className="border-t border-gray-200">
-                                <td className="p-3">{index + 1 + indexOfFirstItem}</td>
+                                <td className="p-3">{item.id}</td>
                                 <td className="p-3">{item.name}</td>
                                 <td className="p-3">{item.capacity}</td>
                                 <td className="p-3">{item.category}</td>
-                                <td className="p-3">{item.price}</td>
+                                <td className="p-3">{formatPrice(item.price)}</td>
                                 <td className={`p-3 font-bold ${item.status === "APPROVED" ? "text-green-500" : item.status === "PENDING" ? "text-yellow-500" : "text-red-500"}`}>{item.status}</td>
                                 <td className="p-3 space-x-2">
-                                    <button className="bg-green-500 text-white px-3 py-1 rounded">Approve</button>
-                                    <button className="bg-orange-500 text-white px-3 py-1 rounded">Reject</button>
-                                    <button className="bg-yellow-500 text-white px-3 py-1 rounded">EDIT</button>
-                                    <button className="bg-red-500 text-white px-3 py-1 rounded">HAPUS</button>
+                                    <button className="bg-green-500 text-white px-3 py-1 rounded" onClick={() => handleEdit(item)}>Edit</button>
+                                    <button className="bg-red-500 text-white px-3 py-1 rounded" onClick={() => handleDelete(item.id)}>Delete</button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
                 <div className="flex justify-between items-center mt-4">
-                    <button
-                        className={`px-3 py-1 border rounded ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : "bg-gray-300"}`}
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                    >
-                        Previous
-                    </button>
+                    <button className="px-3 py-1 border rounded" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>Previous</button>
                     <span>Page {currentPage} of {totalPages}</span>
-                    <button
-                        className={`px-3 py-1 border rounded ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "bg-gray-300"}`}
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                    >
-                        Next
-                    </button>
+                    <button className="px-3 py-1 border rounded" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
                 </div>
             </div>
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+                        <h2 className="text-lg font-bold mb-4">{editItem ? "Edit Item" : "Add New Item"}</h2>
+                        <input type="text" placeholder="Name" className="w-full p-2 border mb-2" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
+                        <input type="number" placeholder="Capacity" className="w-full p-2 border mb-2" value={newItem.capacity} onChange={(e) => setNewItem({ ...newItem, capacity: e.target.value })} />
+                        <input type="text" placeholder="Category" className="w-full p-2 border mb-2" value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })} />
+                        <input type="number" placeholder="Price" className="w-full p-2 border mb-4" value={newItem.price} onChange={(e) => setNewItem({ ...newItem, price: e.target.value })} />
+                        <select className="w-full p-2 border mb-4" value={newItem.status} onChange={(e) => setNewItem({ ...newItem, status: e.target.value })}>
+                            <option value="PENDING">PENDING</option>
+                            <option value="APPROVED">APPROVED</option>
+                            <option value="REJECTED">REJECTED</option>
+                        </select>
+                        <div className="flex justify-end space-x-2">
+                            <button className="bg-gray-400 px-3 py-2 rounded" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                            <button className="bg-blue-500 text-white px-3 py-2 rounded" onClick={handleAddOrUpdateItem}>Save</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
