@@ -12,15 +12,27 @@ const initialData = [
 
 const UserTable = () => {
     const [users, setUsers] = useState(initialData);
-    const [newUser , setNewUser ] = useState({ name: "", email: "" });
-    const [editUser , setEditUser ] = useState(null);
+    const [newUser, setNewUser] = useState({ name: "", email: "" });
+    const [editUser, setEditUser] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [nextId, setNextId] = useState(initialData.length + 1);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5; // Mengubah jumlah item per halaman menjadi 5
+    const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' }); // New state for sorting
+    const itemsPerPage = 5; // Items per page
 
-    const filteredUsers = users.filter(user =>
+    // Sorting function
+    const sortedUsers = [...users].sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+
+    const filteredUsers = sortedUsers.filter(user =>
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -28,34 +40,43 @@ const UserTable = () => {
     const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
     const displayedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    const handleAddOrUpdateUser  = () => {
-        if (!newUser .name || !newUser .email) {
+    const handleAddOrUpdateUser = () => {
+        if (!newUser.name || !newUser.email) {
             alert("Semua bidang harus diisi!");
             return;
         }
 
-        if (editUser ) {
+        if (editUser) {
             setUsers(prevUsers => prevUsers.map(user =>
-                user.id === editUser .id ? { ...newUser , id: editUser .id } : user
+                user.id === editUser.id ? { ...newUser, id: editUser.id } : user
             ));
         } else {
-            setUsers(prevUsers => [...prevUsers, { ...newUser , id: nextId }]);
+            setUsers(prevUsers => [...prevUsers, { ...newUser, id: nextId }]);
             setNextId(prevId => prevId + 1);
         }
 
-        setNewUser ({ name: "", email: "" });
-        setEditUser (null);
+        setNewUser({ name: "", email: "" });
+        setEditUser(null);
         setIsModalOpen(false);
     };
 
     const handleEdit = (user) => {
-        setNewUser ({ name: user.name, email: user.email });
-        setEditUser (user);
+        setNewUser({ name: user.name, email: user.email });
+        setEditUser(user);
         setIsModalOpen(true);
     };
 
     const handleDelete = (id) => {
         setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+    };
+
+    // Function to handle sorting
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
     };
 
     return (
@@ -74,9 +95,15 @@ const UserTable = () => {
                 <table className="w-full border-collapse border border-gray-200">
                     <thead>
                         <tr className="bg-gray-200">
-                            <th className="p-3 text-left">ID</th>
-                            <th className="p-3 text-left">Name</th>
-                            <th className="p-3 text-left">Email</th>
+                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('id')}>
+                                ID {sortConfig.key === 'id' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : null}
+                            </th>
+                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('name')}>
+                                Name {sortConfig.key === 'name' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : null}
+                            </th>
+                            <th className="p-3 text-left cursor-pointer" onClick={() => requestSort('email')}>
+                                Email {sortConfig.key === 'email' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : null}
+                            </th>
                             <th className="p-3 text-left">Action</th>
                         </tr>
                     </thead>
@@ -110,12 +137,12 @@ const UserTable = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-                        <h2 className="text-lg font-bold mb-4">{editUser  ? "Edit User" : "Add New User"}</h2>
-                        <input type="text" placeholder="Name" className="w-full p-2 border mb-2" value={newUser .name} onChange={(e) => setNewUser ({ ...newUser , name: e.target.value })} />
-                        <input type="email" placeholder="Email" className="w-full p-2 border mb-4" value={newUser .email} onChange={(e) => setNewUser ({ ...newUser , email: e.target.value })} />
+                        <h2 className="text-lg font-bold mb-4">{editUser ? "Edit User" : "Add New User"}</h2>
+                        <input type="text" placeholder="Name" className="w-full p-2 border mb-2" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} />
+                        <input type="email" placeholder="Email" className="w-full p-2 border mb-4" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} />
                         <div className="flex justify-end space-x-2">
                             <button className="bg-gray-400 px-3 py-2 rounded" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                            <button className="bg-blue-500 text-white px-3 py-2 rounded" onClick={handleAddOrUpdateUser }>Save</button>
+                            <button className="bg-blue-500 text-white px-3 py-2 rounded" onClick={handleAddOrUpdateUser}>Save</button>
                         </div>
                     </div>
                 </div>

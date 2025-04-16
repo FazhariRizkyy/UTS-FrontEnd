@@ -119,11 +119,26 @@ export default function DashboardTable() {
                 <table className="w-full border-collapse bg-white">
                     <thead>
                         <tr className="bg-gray-200">
-                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('id')}>NO</th>
-                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('room')}>ROOM</th>
-                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('bookingDate')}>BOOKING DATE</th>
-                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('bookedBy')}>BOOKED BY</th>
-                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('price')}>PRICE</th>
+                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('id')}>
+                                NO
+                                {sortConfig.key === 'id' ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼') : null}
+                            </th>
+                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('room')}>
+                                ROOM
+                                {sortConfig.key === 'room' ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼') : null}
+                            </th>
+                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('bookingDate')}>
+                                BOOKING DATE
+                                {sortConfig.key === 'bookingDate' ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼') : null}
+                            </th>
+                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('bookedBy')}>
+                                BOOKED BY
+                                {sortConfig.key === 'bookedBy' ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼') : null}
+                            </th>
+                            <th className="p-2 text-left cursor-pointer" onClick={() => requestSort('price')}>
+                                PRICE
+                                {sortConfig.key === 'price' ? (sortConfig.direction === 'ascending' ? ' ▲' : ' ▼') : null}
+                            </th>
                             <th className="p-2 text-center">ACTION</th>
                         </tr>
                     </thead>

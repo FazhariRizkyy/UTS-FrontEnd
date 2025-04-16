@@ -22,7 +22,31 @@ const Table = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const itemsPerPage = 5;
 
+    const [sortField, setSortField] = useState<string | null>(null);
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
     const filteredData = tableData.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const handleSort = (field: string) => {
+        const newSortDirection = sortField === field && sortDirection === "asc" ? "desc" : "asc";
+        setSortField(field);
+        setSortDirection(newSortDirection);
+
+        const sortedData = [...filteredData].sort((a, b) => {
+            if (typeof a[field] === "string") {
+                return newSortDirection === "asc"
+                    ? a[field].localeCompare(b[field])
+                    : b[field].localeCompare(a[field]);
+            } else {
+                return newSortDirection === "asc"
+                    ? a[field] - b[field]
+                    : b[field] - a[field];
+            }
+        });
+
+        setTableData(sortedData);
+    };
+
     const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -74,7 +98,16 @@ const Table = () => {
                     <thead>
                         <tr className="bg-gray-200">
                             {["ID", "Name", "Capacity", "Category", "Price", "Status", "Action"].map((key) => (
-                                <th key={key} className="p-3 text-left">{key}</th>
+                                <th
+                                    key={key}
+                                    className="p-3 text-left cursor-pointer"
+                                    onClick={() => handleSort(key.toLowerCase())}
+                                >
+                                    {key}
+                                    {sortField === key.toLowerCase() && (
+                                        <span>{sortDirection === "asc" ? " ↑" : " ↓"}</span>
+                                    )}
+                                </th>
                             ))}
                         </tr>
                     </thead>
