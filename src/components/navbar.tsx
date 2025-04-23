@@ -45,18 +45,35 @@ export default function Navbar() {
                     {/* Menu Tengah */}
                     <div className="hidden md:block flex-grow text-center">
                         <div className="ml-10 flex items-baseline justify-center space-x-4">
-                            <Link href="/dashboard" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                Dashboard
-                            </Link>
-                            <Link href="/room" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                Room Management
-                            </Link>
-                            <Link href="/user" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                User Management
-                            </Link>
-                            <Link href="/booking" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                Booking
-                            </Link>
+                            {/* Menu conditional: tampilkan menu berbeda berdasarkan isLoggedIn */}
+                            {!isLoggedIn ? (
+                                <>
+                                    <Link href="/" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        Home
+                                    </Link>
+                                    <Link href="/about" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        About Us
+                                    </Link>
+                                    <Link href="/contact" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        Contact Us
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link href="/dashboard" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        Dashboard
+                                    </Link>
+                                    <Link href="/room" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        Room Management
+                                    </Link>
+                                    <Link href="/user" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        User Management
+                                    </Link>
+                                    <Link href="/booking" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                        Booking
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
 
