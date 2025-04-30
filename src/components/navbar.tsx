@@ -1,14 +1,20 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulasi login state
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        // Cek localStorage apakah user sudah login
+        const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        setIsLoggedIn(loggedIn);
+    }, []);
 
     const toggleAccountDropdown = () => {
         setIsAccountDropdownOpen(!isAccountDropdownOpen);
@@ -16,11 +22,11 @@ export default function Navbar() {
     };
 
     const handleLogin = () => {
-        setIsLoggedIn(true);
-        router.push('/dashboard');
+        router.push('/login');
     };
 
     const handleLogout = () => {
+        localStorage.removeItem('isLoggedIn');
         setIsLoggedIn(false);
         router.push('/');
     };
@@ -29,7 +35,6 @@ export default function Navbar() {
         <nav className="bg-white border-gray-200 dark:bg-gray-900">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
                     <div className="flex items-center">
                         <Link href="/" className="flex-shrink-0">
                             <Image
@@ -42,10 +47,8 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Menu Tengah */}
                     <div className="hidden md:block flex-grow text-center">
                         <div className="ml-10 flex items-baseline justify-center space-x-4">
-                            {/* Menu conditional: tampilkan menu berbeda berdasarkan isLoggedIn */}
                             {!isLoggedIn ? (
                                 <>
                                     <Link href="/" className="text-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
@@ -77,7 +80,6 @@ export default function Navbar() {
                         </div>
                     </div>
 
-                    {/* Login/Register atau Account */}
                     <div className="flex items-center">
                         {isLoggedIn ? (
                             <div className="relative">
